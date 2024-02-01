@@ -1,6 +1,4 @@
-import argparse
-import requests
-from visual import visual_window
+from visual import Window
 
 
 def main():
@@ -10,7 +8,8 @@ def main():
                      'spn': str(spn[0]) + ',' + str(spn[1]),
                      'l': 'map'}
     api_adress = "http://static-maps.yandex.ru/1.x/"
-    visual_window(api_adress, search_params)
+    app = Window(api_adress, search_params)
+    app.run()
 
 
 if __name__ == '__main__':

@@ -4,28 +4,51 @@ import os
 import sys
 
 
-def visual_window(api_adress, search_params):
-    print(api_adress)
-    print(search_params)
-    response = requests.get(api_adress, params=search_params)
+class Window:
+    def __init__(self, i_adress, i_params):
+        self.adress = i_adress
+        self.parameters = i_params
+        self.map_file = "map.png"
+        self.update_image()
 
-    if not response:
-        print("Ошибка выполнения запроса:")
-        print("Http статус:", response.status_code, "(", response.reason, ")")
-        sys.exit(1)
+    def update_image(self, action=None):
+        if action is None:
+            response = requests.get(self.adress, params=self.parameters)
 
-    map_file = "map.png"
-    with open(map_file, "wb") as file:
-        file.write(response.content)
+            if not response:
+                """print("Ошибка выполнения запроса:")
+                print("Http статус:", response.status_code, "(", response.reason, ")")"""
+                return
 
-    pygame.init()
-    screen = pygame.display.set_mode((600, 450))
-    screen.blit(pygame.image.load(map_file), (0, 0))
-    pygame.display.flip()
-    while pygame.event.wait().type != pygame.QUIT:
-        pass
-    pygame.quit()
-    os.remove(map_file)
+            with open(self.map_file, "wb") as file:
+                file.write(response.content)
+        else:
+            if action == 'spn_extend':
+                temp_list = list(map(float, self.parameters['spn'].split(',')))
+                res = ','.join(list(map(lambda x: str(x * 1.75), temp_list)))
+                self.parameters['spn'] = res
+            elif action == 'spn_reduce':
+                temp_list = list(map(float, self.parameters['spn'].split(',')))
+                res = ','.join(list(map(lambda x: str(x * 0.5), temp_list)))
+                self.parameters['spn'] = res
+
+    def run(self):
+        pygame.init()
+        screen = pygame.display.set_mode((600, 450))
+        while True:
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    pygame.quit()
+                    os.remove(self.map_file)
+                    sys.exit()
+                if event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_PAGEUP:
+                        self.update_image(action='spn_extend')
+                    if event.key == pygame.K_PAGEDOWN:
+                        self.update_image(action='spn_reduce')
+            self.update_image()
+            screen.blit(pygame.image.load(self.map_file), (0, 0))
+            pygame.display.flip()
 
 
 if __name__ == '__main__':
@@ -35,4 +58,5 @@ if __name__ == '__main__':
                      'spn': str(spn[0]) + ',' + str(spn[1]),
                      'l': 'map'}
     api_adress = "http://static-maps.yandex.ru/1.x/"
-    visual_window(api_adress, search_params)
+    app = Window(api_adress, search_params)
+    app.run()
