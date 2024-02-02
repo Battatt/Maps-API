@@ -10,6 +10,7 @@ class Window:
         self.adress = i_adress
         self.width, self.height = 1000, 650
         self.parameters = i_params
+        self.main_parameters = i_params.copy()
         self.map_file = "map.png"
         self.update_image()
 
@@ -78,6 +79,8 @@ class Window:
                     self.parameters['ll'] = point
                     if 'pt' not in self.parameters.keys():
                         self.parameters['pt'] = f"{point},flag"
+                    elif self.parameters['pt'] is None:
+                        self.parameters['pt'] = f"{point},flag"
                     else:
                         self.parameters['pt'] = self.parameters['pt'] + f"~{point},flag"
                     self.update_image()
@@ -91,6 +94,10 @@ class Window:
             print('Не забывайте нажать Enter при вводе текста')
             return
 
+    def reset(self):
+        self.parameters = self.main_parameters
+        self.update_image()
+
     def run(self):
         clock = pygame.time.Clock()
         pygame.init()
@@ -98,7 +105,7 @@ class Window:
         text_input = TextInput(x=0.01 * self.width, y=0.01 * self.height, width=0.7 * self.width,
                                height=0.1 * self.height, image_name='white.png', screen_width=self.width)
         text = ''
-        titles = ['SEARCH', 'MAP', 'SAT', 'SKL']
+        titles = ['SEARCH', 'MAP', 'SAT', 'SKL', 'RESET']
         buttons = []
         button_x, button_y = 0.79 * self.width, 0.01 * self.height
         button_width, button_height = 0.18 * self.width, 0.1 * self.height
@@ -136,6 +143,8 @@ class Window:
                         self.update_image(action='sat')
                     elif event.button.text == 'SEARCH':
                         self.search_object(text)
+                    elif event.button.text == 'RESET':
+                        self.reset()
                 for button in buttons:
                     button.handle_event(event)
                 temp = text_input.handle_event(event)
