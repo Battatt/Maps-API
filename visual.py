@@ -79,9 +79,7 @@ class Window:
                     if 'pt' not in self.parameters.keys():
                         self.parameters['pt'] = f"{point},flag"
                     else:
-                        self.parameters['pt'] = f"{point},flag"
-                        pass
-                        #  self.parameters['pt'] = self.parameters['pt'] + f"~{point},flag"
+                        self.parameters['pt'] = self.parameters['pt'] + f"~{point},flag"
                     self.update_image()
             except Exception as e:
                 print(result)
