@@ -47,3 +47,60 @@ class Button:
                 self.sound.set_volume(self.volume / 100)
                 self.sound.play()
             pygame.event.post(pygame.event.Event(pygame.USEREVENT, button=self))
+
+
+class TextInput:
+    def __init__(self, x, y, width, height, image_name, screen_width, only_digits: bool = False):
+        self.x, self.y, self.width, self.height = x, y, width, height
+        self.screen_width = screen_width
+        self.text = ''
+        self.image = load_image(image_name)
+        self.image = pygame.transform.scale(self.image, (width, height))
+        self.rect = self.image.get_rect(topleft=(x, y))
+        self.counter = 0
+        self.text_input_flag = False
+        self.is_hovered = False
+        self.only_digits = only_digits
+        self.__color = ""
+
+    def draw(self, surface):
+        self.counter += 1
+        surface.blit(self.image, self.rect.topleft)
+        font = pygame.font.Font(None, int(0.03 * self.screen_width))
+        self.text = (self.text.replace('|', '') if self.text_input_flag and self.counter == 5 and '|' in self.text
+                     else self.text + "|" if self.text_input_flag and self.counter < 5 and '|' not in self.text
+                     else self.text)
+        self.counter = self.counter if self.counter < 100 else 0
+
+        color = 'black' if self.text_input_flag else 'green'
+
+        text_surface = font.render(self.text[:35] if len(self.text) <= 35 else self.text[len(self.text) - 35:],
+                                   True, color)
+        text_rect = text_surface.get_rect(center=self.rect.center)
+        surface.blit(text_surface, text_rect)
+
+    def update(self, new_text_x, new_text_y, new_w, new_h):
+        self.x, self.y, self.width, self.height = new_text_x, new_text_y, new_w, new_h
+        self.image = pygame.transform.scale(self.image, (new_w, new_h))
+        self.rect = self.image.get_rect(topleft=(new_text_x, new_text_y))
+
+    def handle_event(self, event):
+        if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+            if self.rect.collidepoint(event.pos):
+                self.text_input_flag = True
+            else:
+                self.text_input_flag = False
+        elif event.type == pygame.KEYDOWN and self.text_input_flag:
+            if event.key == pygame.K_BACKSPACE:
+                self.text = self.text.replace('|', '')
+                self.text = self.text[:-1]
+                self.text += "|"
+            elif event.key == pygame.K_RETURN:
+                self.text = self.text.replace('|', '')
+                self.text_input_flag = False
+                return self.text
+            elif self.only_digits is False or event.unicode.isdigit():
+                self.text = self.text.replace('|', '')
+                self.text += event.unicode
+                self.text += "|"
+        return None

@@ -2,7 +2,7 @@ import requests
 import pygame
 import os
 import sys
-from objects import Button
+from objects import Button, TextInput
 
 
 class Window:
@@ -59,10 +59,48 @@ class Window:
             elif action in ['sat', 'skl', 'map']:
                 self.parameters['l'] = action
 
+    def search_object(self, name):
+        if name is not None:
+            response = requests.get(f"http://geocode-maps.yandex.ru/1.x/?apikey=40d1649f-0493-4b70-98ba-"
+                                    f"98533de7710b&geocode={name}&format=json")
+            if not response:
+                print("Ошибка выполнения запроса:")
+                print("Http статус:", response.status_code, "(", response.reason, ")")
+                print("PARAMS:", name)
+                print('Не забывайте нажать Enter при вводе текста')
+                return
+            result = response.json()
+            try:
+                point = result['response']['GeoObjectCollection']['featureMember'][-1]['GeoObject']['Point']['pos']
+                point = point.split()
+                if point:
+                    point = ','.join(point)
+                    self.parameters['ll'] = point
+                    if 'pt' not in self.parameters.keys():
+                        self.parameters['pt'] = f"{point},flag"
+                    else:
+                        self.parameters['pt'] = f"{point},flag"
+                        pass
+                        #  self.parameters['pt'] = self.parameters['pt'] + f"~{point},flag"
+                    self.update_image()
+            except Exception as e:
+                print(result)
+                print(e)
+                print('Ошибка при выполнении поискового запроса')
+        else:
+            print('Ошибка в вызове геокодера')
+            print('Переданные параметры:', name)
+            print('Не забывайте нажать Enter при вводе текста')
+            return
+
     def run(self):
+        clock = pygame.time.Clock()
         pygame.init()
         screen = pygame.display.set_mode((self.width, self.height))
-        titles = ['MAP', 'SAT', 'SKL']
+        text_input = TextInput(x=0.01 * self.width, y=0.01 * self.height, width=0.7 * self.width,
+                               height=0.1 * self.height, image_name='white.png', screen_width=self.width)
+        text = ''
+        titles = ['SEARCH', 'MAP', 'SAT', 'SKL']
         buttons = []
         button_x, button_y = 0.79 * self.width, 0.01 * self.height
         button_width, button_height = 0.18 * self.width, 0.1 * self.height
@@ -98,15 +136,22 @@ class Window:
                         self.update_image(action='skl')
                     elif event.button.text == 'SAT':
                         self.update_image(action='sat')
+                    elif event.button.text == 'SEARCH':
+                        self.search_object(text)
                 for button in buttons:
                     button.handle_event(event)
+                temp = text_input.handle_event(event)
+                if temp is not None:
+                    text = temp
             self.update_image()
             pygame.draw.rect(screen, 'gray', (0, 80, 640, 490), 0)
             screen.blit(pygame.image.load(self.map_file), (15, 95))
             for button in buttons:
                 button.hovered_checker(pygame.mouse.get_pos())
                 button.draw(screen)
+            text_input.draw(screen)
             pygame.display.flip()
+            clock.tick(60)
 
 
 if __name__ == '__main__':
