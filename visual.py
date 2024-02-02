@@ -2,11 +2,13 @@ import requests
 import pygame
 import os
 import sys
+from objects import Button
 
 
 class Window:
     def __init__(self, i_adress, i_params):
         self.adress = i_adress
+        self.width, self.height = 1000, 650
         self.parameters = i_params
         self.map_file = "map.png"
         self.update_image()
@@ -54,10 +56,21 @@ class Window:
                     y = y_0 if y > 90 else y_0 if y < -90 else y
                     res = str(x) + ',' + str(y)
                     self.parameters['ll'] = res
+            elif action in ['sat', 'skl', 'map']:
+                self.parameters['l'] = action
 
     def run(self):
         pygame.init()
-        screen = pygame.display.set_mode((1000, 650))
+        screen = pygame.display.set_mode((self.width, self.height))
+        titles = ['MAP', 'SAT', 'SKL']
+        buttons = []
+        button_x, button_y = 0.79 * self.width, 0.01 * self.height
+        button_width, button_height = 0.18 * self.width, 0.1 * self.height
+        for i in range(len(titles)):
+            buttons.append(Button(x=button_x, y=button_y + i * button_height + i * 10,
+                                  image_name='green.png',
+                                  width=button_width, height=button_height,
+                                  text=titles[i], volume=0, screen_width=self.width))
         screen.fill((20, 20, 20))
         while True:
             for event in pygame.event.get():
@@ -78,9 +91,21 @@ class Window:
                         self.update_image(action='move', movement='right')
                     elif event.key == pygame.K_LEFT:
                         self.update_image(action='move', movement='left')
+                elif event.type == pygame.USEREVENT:
+                    if event.button.text == 'MAP':
+                        self.update_image(action='map')
+                    elif event.button.text == 'SKL':
+                        self.update_image(action='skl')
+                    elif event.button.text == 'SAT':
+                        self.update_image(action='sat')
+                for button in buttons:
+                    button.handle_event(event)
             self.update_image()
             pygame.draw.rect(screen, 'gray', (0, 80, 640, 490), 0)
             screen.blit(pygame.image.load(self.map_file), (15, 95))
+            for button in buttons:
+                button.hovered_checker(pygame.mouse.get_pos())
+                button.draw(screen)
             pygame.display.flip()
 
 
