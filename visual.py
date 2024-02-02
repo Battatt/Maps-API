@@ -12,6 +12,7 @@ class Window:
         self.parameters = i_params
         self.main_parameters = i_params.copy()
         self.map_file = "map.png"
+        self.log_adress = ''
         self.update_image()
 
     def update_image(self, action=None, movement=None):
@@ -95,7 +96,7 @@ class Window:
             return
 
     def reset(self):
-        self.parameters = self.main_parameters
+        self.parameters = self.main_parameters.copy()
         self.update_image()
 
     def run(self):
