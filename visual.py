@@ -13,6 +13,7 @@ class Window:
         self.main_parameters = i_params.copy()
         self.map_file = "map.png"
         self.log_adress = ''
+        self.post = ''
         self.update_image()
 
     def update_image(self, action=None, movement=None):
@@ -33,7 +34,7 @@ class Window:
                 res = []
                 for sp in temp_list:
                     extend = sp
-                    if sp * 1.75 <= 100:
+                    if sp * 1.75 <= 90:
                         extend *= 1.75
                     res.append(str(extend))
                 res = ','.join(res)
@@ -74,6 +75,15 @@ class Window:
             result = response.json()
             try:
                 point = result['response']['GeoObjectCollection']['featureMember'][-1]['GeoObject']['Point']['pos']
+                self.log_adress = result['response']['GeoObjectCollection']['featureMember'][0]['GeoObject']
+                self.log_adress = self.log_adress["metaDataProperty"]["GeocoderMetaData"]["Address"]["formatted"]
+                try:
+                    self.post = result['response']['GeoObjectCollection']['featureMember'][0]['GeoObject']
+                    self.post = self.post["metaDataProperty"]["GeocoderMetaData"]["Address"]
+                    print(self.post)
+                except Exception as e:
+                    print(e)
+                    pass
                 point = point.split()
                 if point:
                     point = ','.join(point)
@@ -96,12 +106,14 @@ class Window:
             return
 
     def reset(self):
+        self.log_adress, self.post = '', ''
         self.parameters = self.main_parameters.copy()
         self.update_image()
 
     def run(self):
         clock = pygame.time.Clock()
         pygame.init()
+        font = pygame.font.Font(None, int(0.03 * self.width))
         screen = pygame.display.set_mode((self.width, self.height))
         text_input = TextInput(x=0.01 * self.width, y=0.01 * self.height, width=0.7 * self.width,
                                height=0.1 * self.height, image_name='white.png', screen_width=self.width)
@@ -115,8 +127,8 @@ class Window:
                                   image_name='green.png',
                                   width=button_width, height=button_height,
                                   text=titles[i], volume=0, screen_width=self.width))
-        screen.fill((20, 20, 20))
         while True:
+            screen.fill((20, 20, 20))
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     pygame.quit()
@@ -152,11 +164,15 @@ class Window:
                 if temp is not None:
                     text = temp
             self.update_image()
-            pygame.draw.rect(screen, 'gray', (0, 80, 640, 490), 0)
+            pygame.draw.rect(screen, 'gray', (0, 80, 750, 490), 0)
             screen.blit(pygame.image.load(self.map_file), (15, 95))
             for button in buttons:
                 button.hovered_checker(pygame.mouse.get_pos())
                 button.draw(screen)
+            if self.log_adress:
+                text_draw = font.render(self.log_adress, True, 'white')
+                text_rect = pygame.rect.Rect(10, 550, 640, 200)
+                screen.blit(text_draw, text_rect)
             text_input.draw(screen)
             pygame.display.flip()
             clock.tick(60)
