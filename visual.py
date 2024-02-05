@@ -10,7 +10,6 @@ class Window:
         self.adress = i_adress
         self.width, self.height = 1000, 650
         self.parameters = i_params
-        self.main_parameters = i_params.copy()
         self.map_file = "map.png"
         self.log_adress = ''
         self.post = ''
@@ -107,7 +106,7 @@ class Window:
 
     def reset(self):
         self.log_adress, self.post = '', ''
-        self.parameters = self.main_parameters.copy()
+        self.parameters['pt'] = None
         self.update_image()
 
     def run(self):
